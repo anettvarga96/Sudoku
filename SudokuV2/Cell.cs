@@ -13,6 +13,7 @@ namespace SudokuV2
         public int Value { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
+        public bool isStartingCell = false;
 
         public void Clear()
         {

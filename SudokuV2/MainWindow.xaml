@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SudokuV2"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="600">
+        ResizeMode="NoResize"
+        Title="Sudoku" Height="600" Width="600">
 
     <Window.Resources>
         <Style TargetType="Button">
@@ -18,16 +19,21 @@
     <Canvas>
         <Canvas x:Name="myCanvas" Background="Olive" Height="350" Width="350" Canvas.Left="65" Canvas.Top="65"/>
 
+        <Label Content="Sudoku" Canvas.Left="65" Canvas.Top="15" FontSize ="30" Foreground="RosyBrown"/>
         <Label Content="Difficulty:" Canvas.Left="480" Canvas.Top="65"/>
         <ComboBox Background="AntiqueWhite" Canvas.Left="465" Canvas.Top="90" Width="90">
             <ComboBoxItem>Easy</ComboBoxItem>
             <ComboBoxItem>Medium</ComboBoxItem>
             <ComboBoxItem>Hard</ComboBoxItem>
         </ComboBox>
-        <Button Content ="New Game" Canvas.Left="465" Canvas.Top="140" Height="30" Width="90"/>
+        <Button Content ="New Game" Canvas.Left="465" Canvas.Top="140" Height="30" Width="90" Click="NewGame"/>
         <Button Content ="Reset Game" Canvas.Left="465" Canvas.Top="190" Height="30" Width="90"/>
+        <Button Content="Show Solution" Canvas.Left="465" Canvas.Top="240" Height="30" Width="90" Click="ShowSolution"/>
 
-        <Canvas x:Name="numbers" Height="30" Width="500" Canvas.Left="65" Canvas.Top="450"/>
+
+        <Canvas x:Name="numbers" Height="30" Width="500" Canvas.Left="65" Canvas.Top="450">
+            <Button Content="Clear" Canvas.Left="360" Width="90" Click="ClearCell"/>
+        </Canvas>
 
 
     </Canvas>
