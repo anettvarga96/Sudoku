@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Net.Http;
+using System.Text.Json;
 
 namespace SudokuV2
 {
@@ -21,7 +23,7 @@ namespace SudokuV2
     public partial class MainWindow : Window
     {
         Cell[,] cells = new Cell[9, 9];
-        private int[,] solution = new int[9, 9];
+        DifficultyLevel difficultyLevel;
 
         Cell selectedCell = null;
         Button numberButton;
@@ -33,9 +35,9 @@ namespace SudokuV2
             InitializeComponent();
             createGrid();
             drawButtons();
-            createSolution();
         }
 
+        #region INITIALIZATION
         private void createGrid()
         {
 
@@ -45,8 +47,8 @@ namespace SudokuV2
                 for (int j = 0; j < 9; j++)
                 {
                     cells[i, j] = new Cell();
-                    cells[i, j].X = i;
-                    cells[i, j].Y = j;
+                    cells[i, j].x = i;
+                    cells[i, j].y = j;
 
                     cells[i, j].Height = 40;
                     cells[i, j].Width = 40;
@@ -101,7 +103,7 @@ namespace SudokuV2
                         cells[i, j].BorderThickness = new Thickness(1, 1, 3, 3);
                     }
 
-                    cells[i, j].Click += new RoutedEventHandler(this.Cell_Button_Click);
+                    cells[i, j].Click += new RoutedEventHandler(Cell_Button_Click);
 
                     myCanvas.Children.Add(cells[i, j]);
                 }
@@ -125,59 +127,70 @@ namespace SudokuV2
             }
         }
 
+        #endregion
 
-        public void Cell_Button_Click(object sender, RoutedEventArgs e)
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (selectedCell != null)
+            var comboBox = sender as ComboBox;
+
+            switch (comboBox.SelectedItem.ToString().Split(' ').Last())
             {
-                if (whiteBg.Contains(selectedCell.X) ^ whiteBg.Contains(selectedCell.Y))
+                case "Easy":
+                    difficultyLevel = DifficultyLevel.Easy;
+                    break;
+                case "Medium":
+                    difficultyLevel = DifficultyLevel.Medium;
+                    break;
+                case "Hard":
+                    difficultyLevel = DifficultyLevel.Hard;
+                    break;
+            }
+
+        }
+
+        private async void NewGame(object sender, RoutedEventArgs e)
+        {
+            if (difficultyLevel != 0)
+            {
+                ClearBoard();
+
+                HttpClient client = new HttpClient();
+
+                string response = await client.GetStringAsync("http://www.cs.utep.edu/cheon/ws/sudoku/new/?size=9&level=" + (int)difficultyLevel);
+
+                SudokuResponse sudokuResponse = JsonSerializer.Deserialize<SudokuResponse>(response);
+
+                if (sudokuResponse.response)
                 {
-                    selectedCell.Background = Brushes.AntiqueWhite;
+                    foreach (var item in sudokuResponse.squares)
+                    {
+                        cells[item.x, item.y].value = item.value;
+                        cells[item.x, item.y].Content = item.value;
+                        cells[item.x, item.y].isStartingCell = true;
+                        cells[item.x, item.y].isBlocked = true;
+                    }
                 }
-                else
-                    selectedCell.Background = Brushes.RosyBrown;
 
-                selectedCell = null;
+                SudokuSolver sudokuSolver = new SudokuSolver(cells);
+                sudokuSolver.solveSudoku();
             }
-
-            selectedCell = sender as Cell;
-            selectedCell.Background = Brushes.LightGray;
-        }
-
-        public void Number_Button_Click(object sender, RoutedEventArgs e)
-        {
-            numberButton = sender as Button;
-
-            if ((int)numberButton.Content != solution[selectedCell.X, selectedCell.Y])
-            {
-                selectedCell.Background = Brushes.DarkRed;
-            }
-            selectedCell.Content = numberButton.Content;
+            else
+                MessageBox.Show("A difficulty level must be selected first!", "Warning!", MessageBoxButton.OK, MessageBoxImage.Warning);
 
         }
 
-        private void ClearCell(object sender, RoutedEventArgs e)
+        private void ResetGame(object sender, RoutedEventArgs e)
         {
-            selectedCell.Clear();
-        }
-
-        private void NewGame(object sender, RoutedEventArgs e)
-        {
-            foreach (var cell in cells)
+            ClearBoard();
+            for (var i = 0; i < 9; i++)
             {
-                cell.Clear();
-            }
-
-            if (selectedCell != null)
-            {
-                if (whiteBg.Contains(selectedCell.X) ^ whiteBg.Contains(selectedCell.Y))
+                for (var j = 0; j < 9; j++)
                 {
-                    selectedCell.Background = Brushes.AntiqueWhite;
+                    if (cells[i, j].isStartingCell)
+                    {
+                        cells[i, j].Content = cells[i, j].value;
+                    }
                 }
-                else
-                    selectedCell.Background = Brushes.RosyBrown;
-
-                selectedCell = null;
             }
         }
 
@@ -187,22 +200,92 @@ namespace SudokuV2
             {
                 for (int j = 0; j < 9; j++)
                 {
-                    cells[i, j].Content = solution[i, j];
+                    cells[i, j].Content = cells[i, j].value;
                 }
             }
         }
-        
-        private void createSolution()
-        {      
-            solution[4, 0] = solution[1, 1] = solution[8, 2] = solution[0, 3] = solution[6, 4] = solution[5, 5] = solution[7, 6] = solution[3, 7] = solution[2, 8] = 1;
-            solution[0, 0] = solution[8, 1] = solution[3, 2] = solution[2, 3] = solution[7, 4] = solution[4, 5] = solution[5, 6] = solution[1, 7] = solution[6, 8] = 2;
-            solution[7, 0] = solution[2, 1] = solution[4, 2] = solution[5, 3] = solution[8, 4] = solution[1, 5] = solution[0, 6] = solution[6, 7] = solution[3, 8] = 3;
-            solution[2, 0] = solution[6, 1] = solution[5, 2] = solution[3, 3] = solution[0, 4] = solution[7, 5] = solution[1, 6] = solution[8, 7] = solution[4, 8] = 4;
-            solution[1, 0] = solution[4, 1] = solution[7, 2] = solution[6, 3] = solution[3, 4] = solution[0, 5] = solution[2, 6] = solution[5, 7] = solution[8, 8] = 5;
-            solution[6, 0] = solution[5, 1] = solution[0, 2] = solution[1, 3] = solution[4, 4] = solution[8, 5] = solution[3, 6] = solution[2, 7] = solution[7, 8] = 6;
-            solution[3, 0] = solution[7, 1] = solution[2, 2] = solution[4, 3] = solution[1, 4] = solution[6, 5] = solution[8, 6] = solution[0, 7] = solution[5, 8] = 7;
-            solution[8, 0] = solution[3, 1] = solution[1, 2] = solution[7, 3] = solution[5, 4] = solution[2, 5] = solution[6, 6] = solution[4, 7] = solution[0, 8] = 8;
-            solution[5, 0] = solution[0, 1] = solution[6, 2] = solution[8, 3] = solution[2, 4] = solution[3, 5] = solution[4, 6] = solution[7, 7] = solution[1, 8] = 9;
+
+
+        public void Cell_Button_Click(object sender, RoutedEventArgs e)
+        {
+            ClearSelection();
+
+            selectedCell = sender as Cell;
+            selectedCell.Background = Brushes.LightGray;
         }
+
+        public void Number_Button_Click(object sender, RoutedEventArgs e)
+        {
+            numberButton = sender as Button;
+
+            if (selectedCell != null && !selectedCell.isBlocked)
+            {
+                selectedCell.Content = numberButton.Content;
+
+                if (selectedCell.value == (int)selectedCell.Content)
+                {
+                    selectedCell.isBlocked = true;
+                    ClearSelection();
+                }
+
+                else
+                    selectedCell.Background = Brushes.Red;
+
+            }
+
+            else
+            {
+                MessageBox.Show("A cell must be selected first!", "Warning!", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+        }
+
+
+
+        #region CLEAR METHODS
+        private void ClearCell(object sender, RoutedEventArgs e)
+        {
+            if (selectedCell != null && !selectedCell.isBlocked)
+            {
+                selectedCell.Clear();
+            }
+
+            ClearSelection();
+        }
+
+        private void ClearBoard()
+        {
+            //problem with newgame/resetgame
+            for (var i = 0; i < 9; i++)
+            {
+                for (var j = 0; j < 9; j++)
+                {
+                    cells[i, j].Clear();
+                }
+            }
+
+            ClearSelection();
+        }        
+
+
+        private void ClearSelection()
+        {
+            if (selectedCell != null)
+            {
+                if (selectedCell.isBlocked || selectedCell.Content.ToString() == "")
+                {
+                    if (whiteBg.Contains(selectedCell.x) ^ whiteBg.Contains(selectedCell.y))
+                    {
+                        selectedCell.Background = Brushes.AntiqueWhite;
+                    }
+                    else
+                        selectedCell.Background = Brushes.RosyBrown;
+                }
+                
+                selectedCell = null;
+            }
+        }
+
+        #endregion
     }
 }

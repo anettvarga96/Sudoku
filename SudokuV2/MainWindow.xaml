@@ -21,13 +21,13 @@
 
         <Label Content="Sudoku" Canvas.Left="65" Canvas.Top="15" FontSize ="30" Foreground="RosyBrown"/>
         <Label Content="Difficulty:" Canvas.Left="480" Canvas.Top="65"/>
-        <ComboBox Background="AntiqueWhite" Canvas.Left="465" Canvas.Top="90" Width="90">
-            <ComboBoxItem>Easy</ComboBoxItem>
-            <ComboBoxItem>Medium</ComboBoxItem>
-            <ComboBoxItem>Hard</ComboBoxItem>
+        <ComboBox Background="AntiqueWhite" Canvas.Left="465" Canvas.Top="90" Width="90" SelectionChanged="ComboBox_SelectionChanged">
+            <ComboBoxItem Name="Easy">Easy</ComboBoxItem>
+            <ComboBoxItem Name="Medium">Medium</ComboBoxItem>
+            <ComboBoxItem Name="Hard">Hard</ComboBoxItem>
         </ComboBox>
         <Button Content ="New Game" Canvas.Left="465" Canvas.Top="140" Height="30" Width="90" Click="NewGame"/>
-        <Button Content ="Reset Game" Canvas.Left="465" Canvas.Top="190" Height="30" Width="90"/>
+        <Button Content ="Reset Game" Canvas.Left="465" Canvas.Top="190" Height="30" Width="90" Click="ResetGame"/>
         <Button Content="Show Solution" Canvas.Left="465" Canvas.Top="240" Height="30" Width="90" Click="ShowSolution"/>
 
 
