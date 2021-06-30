@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Net.Http;
 using System.Text.Json;
+using System.Windows.Threading;
 
 namespace SudokuV2
 {
@@ -24,6 +25,8 @@ namespace SudokuV2
     {
         Cell[,] cells = new Cell[9, 9];
         DifficultyLevel difficultyLevel;
+        DispatcherTimer dispatcherTimer = new DispatcherTimer();
+        TimeSpan elapsedSeconds;
 
         Cell selectedCell = null;
         Button numberButton;
@@ -35,6 +38,7 @@ namespace SudokuV2
             InitializeComponent();
             createGrid();
             drawButtons();
+            initTimer();
         }
 
         #region INITIALIZATION
@@ -126,8 +130,16 @@ namespace SudokuV2
                 numbers.Children.Add(buttons[i]);
             }
         }
+        private void initTimer()
+        {
+            dispatcherTimer.Tick += DispatcherTimer_Tick;
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
+            timer.Content = "00:00:00";
+        }
 
         #endregion
+
+        #region BUTTONS
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -153,6 +165,7 @@ namespace SudokuV2
             if (difficultyLevel != 0)
             {
                 ClearBoard();
+                ResetTimer();
 
                 HttpClient client = new HttpClient();
 
@@ -173,6 +186,7 @@ namespace SudokuV2
 
                 SudokuSolver sudokuSolver = new SudokuSolver(cells);
                 sudokuSolver.solveSudoku();
+
             }
             else
                 MessageBox.Show("A difficulty level must be selected first!", "Warning!", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -181,7 +195,8 @@ namespace SudokuV2
 
         private void ResetGame(object sender, RoutedEventArgs e)
         {
-            ClearBoard();
+            ResetBoard();
+            ResetTimer();
             for (var i = 0; i < 9; i++)
             {
                 for (var j = 0; j < 9; j++)
@@ -205,13 +220,20 @@ namespace SudokuV2
             }
         }
 
-
         public void Cell_Button_Click(object sender, RoutedEventArgs e)
         {
             ClearSelection();
 
             selectedCell = sender as Cell;
             selectedCell.Background = Brushes.LightGray;
+
+            foreach (var cell in cells)
+            {
+                if (cell.x == selectedCell.x || cell.y == selectedCell.y)
+                {
+                    cell.Background = Brushes.LightGray;
+                }
+            }
         }
 
         public void Number_Button_Click(object sender, RoutedEventArgs e)
@@ -240,14 +262,21 @@ namespace SudokuV2
 
         }
 
+        private void DispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            elapsedSeconds += new TimeSpan(0, 0, 1);
+            timer.Content = elapsedSeconds;
+            CommandManager.InvalidateRequerySuggested();
+        }
 
+        #endregion
 
-        #region CLEAR METHODS
+        #region CLEAR/RESET METHODS
         private void ClearCell(object sender, RoutedEventArgs e)
         {
             if (selectedCell != null && !selectedCell.isBlocked)
             {
-                selectedCell.Clear();
+                selectedCell.ClearContent();
             }
 
             ClearSelection();
@@ -255,18 +284,30 @@ namespace SudokuV2
 
         private void ClearBoard()
         {
-            //problem with newgame/resetgame
             for (var i = 0; i < 9; i++)
             {
                 for (var j = 0; j < 9; j++)
                 {
-                    cells[i, j].Clear();
+                    cells[i, j].ClearValueAndContent();
+
+                }
+            }
+
+            ClearSelection();
+        } 
+
+        private void ResetBoard()
+        {
+            for (var i = 0; i < 9; i++)
+            {
+                for (var j = 0; j < 9; j++)
+                {
+                    cells[i, j].ClearContent();
                 }
             }
 
             ClearSelection();
         }        
-
 
         private void ClearSelection()
         {
@@ -280,10 +321,30 @@ namespace SudokuV2
                     }
                     else
                         selectedCell.Background = Brushes.RosyBrown;
+
+                    foreach (Cell cell in cells)
+                    {
+                        if (cell.x == selectedCell.x || cell.y == selectedCell.y)
+                        {
+                            if (whiteBg.Contains(cell.x) ^ whiteBg.Contains(cell.y))
+                            {
+                                cell.Background = Brushes.AntiqueWhite;
+                            }
+                            else
+                                cell.Background = Brushes.RosyBrown;
+                        }
+                    }
                 }
                 
                 selectedCell = null;
             }
+        }
+
+        private void ResetTimer()
+        {
+            dispatcherTimer.Stop();
+            elapsedSeconds = new TimeSpan();
+            dispatcherTimer.Start();
         }
 
         #endregion

@@ -34,6 +34,8 @@
         <Canvas x:Name="numbers" Height="30" Width="500" Canvas.Left="65" Canvas.Top="450">
             <Button Content="Clear" Canvas.Left="360" Width="90" Click="ClearCell"/>
         </Canvas>
+        <Label Content="Elapsed Time: " Canvas.Left="435" Canvas.Top="35" Height="38" Width="85"/>
+        <Label x:Name="timer" Canvas.Left="510" Canvas.Top="35" Height="38" Width="55"/>
 
 
     </Canvas>

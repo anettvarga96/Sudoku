@@ -17,7 +17,15 @@ namespace SudokuV2
         public bool isBlocked { get; set; }
         public bool isStartingCell { get; set; }
 
-        public void Clear()
+        public void ClearValueAndContent()
+        {
+            this.value = null;
+            this.Content = "";
+            this.isBlocked = false;
+            this.isStartingCell = false;
+        }        
+        
+        public void ClearContent()
         {
             this.Content = "";
             this.isBlocked = false;
